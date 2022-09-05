@@ -34,7 +34,24 @@ impl Node {
     }
 
     fn compute(&self) -> f32 {
+        // chech cache
+        for tuple in &self.cache {
+            let mut is_cached = true;
+            for (i, elem) in tuple.0.iter().enumerate() {
+                if elem != &self.dependencies[i].borrow().value {
+                    is_cached = false;
+                    break;
+                }
+            }
+            if is_cached {
+                return tuple.1;
+            }
+        }
         if self.edges.len() == 0 {
+            let mut vec = Vec::new();
+            for element in &self.dependencies {
+                vec.push(element.borrow().value);
+            }
             return self.value;
         } else {
             match &self.op {
@@ -44,8 +61,8 @@ impl Node {
                 Operation::Add => {
                     return self.edges[0].borrow().compute() + self.edges[1].borrow().compute()
                 }
-                Operation::Sin => return self.edges[0].borrow().compute().sin(),
-                Operation::Pow(exp) => return self.edges[0].borrow().compute().powf(*exp),
+                Operation::Sin => return self.edges[0].borrow_mut().compute().sin(),
+                Operation::Pow(exp) => return self.edges[0].borrow_mut().compute().powf(*exp),
                 _ => return self.value,
             }
         }
